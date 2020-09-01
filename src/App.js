@@ -9,6 +9,9 @@ const GlobalStyles = createGlobalStyle`
     padding: 0;
     margin: 0;
   }
+  body{
+    overflow-x: hidden;
+  }
 `
 
 const App = styled.div`

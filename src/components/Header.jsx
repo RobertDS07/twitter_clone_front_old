@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import styled from 'styled-components'
+import { Context } from './Context'
 
 const Header = styled.header`
     grid-area: cabeçalho;
@@ -8,9 +9,22 @@ const Header = styled.header`
 `
 
 export default () => {
+    const {logged} = useContext(Context)
+
+    function logout(e) {
+        localStorage.removeItem('authorization')
+    }
+
     return(
         <Header>
-            
+            {logged && 
+                <form onSubmit={e => logout(e)}>
+                    <button type="submit">Logout</button>
+                </form>
+            }
+            {!logged && 
+                <h1 style={{textAlign:'center'}}>Clone twitter</h1>
+            }   
         </Header>
     )
 }

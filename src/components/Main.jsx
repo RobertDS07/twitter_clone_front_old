@@ -1,8 +1,10 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import styled from 'styled-components'
 import axios from 'axios'
+import { Redirect, Link } from 'react-router-dom'
 
 import config from '../config/config'
+import { Context } from './Context'
 
 const Main = styled.main`
     grid-area: main;
@@ -19,33 +21,60 @@ const Main = styled.main`
 // ESTUDAR MATERIALIZE
 
 
+export default props => {
+    const { logged, setLogged } = useContext(Context)
 
-export default () => {
-    const { url } = config
-
-    async function teste(e) {
+    async function login(e) {
         e.preventDefault()
         const email = e.target.children[0].value
         const password = e.target.children[1].value
+        const name = e.target.children[2].value
 
-        const token = await axios.post(url, {
+        const data = !props.register ? await axios.post(config.url, {
             query: `
             {
                 login(email: "${email}", password: "${password}")
             }
             `
+        }) : await axios.post(config.url, {
+            query: `
+            mutation{
+                createUser(email: "${email}", password: "${password}", name: "${name}",)
+            }
+            `
         })
 
-        console.log(token)
+        const { login } = data.data.data
+        const { createUser } = data.data.data
+
+        localStorage.setItem('authorization', login || createUser)
+
+        if(!!localStorage.getItem('authorization')) setLogged(true)
     }
 
     return (
         <Main>
-            <form onSubmit={e => teste(e)}>
-                <input type="text" name="email" id="email" />
-                <input type="text" name="password" id="password" />
-                <button type="submit">Login</button>
-            </form>
+            {!props.register &&
+            <>
+                <form onSubmit={e => login(e)}>
+                    <input type="text" name="email" id="email" placeholder='email' />
+                    <input type="text" name="password" id="password" placeholder='password' />
+                    <button type="submit">Login</button>
+                    {logged && <Redirect to='/home' />}
+                </form>
+                <Link to='/register'>Register</Link>
+            </>
+            }
+
+            {props.register &&
+                <form onSubmit={e => login(e)}>
+                    <input type="text" name="email" id="email" placeholder='email' />
+                    <input type="text" name="password" id="password" placeholder='password' />
+                    <input type="text" name="name" id="name" placeholder='name' />
+                    <button type="submit">Login</button>
+                    {logged && <Redirect to='/home' />}
+                </form>
+            }
         </Main>
     )
 }
