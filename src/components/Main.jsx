@@ -60,11 +60,17 @@ export default props => {
             `
         })
 
+        const removeError = (divError) => {
+            divError.classList.remove('show')
+        }
+
         if (!!data.data.errors) {
             const {message} = data.data.errors[0]
             const divError = document.querySelector('#error')
 
             divError.classList.add('show')
+
+            setTimeout(() => removeError(divError), 9000)
 
             return divError.innerHTML = message
         }

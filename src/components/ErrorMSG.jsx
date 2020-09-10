@@ -1,5 +1,14 @@
 import React from 'react'
-import styled from 'styled-components'
+import styled, {keyframes} from 'styled-components'
+
+const animation = keyframes`
+    0%{
+        left: 0;
+    }
+    80%{
+        left: 0;
+    }
+`
 
 const Error = styled.div `
     width: 40%;
@@ -11,6 +20,9 @@ const Error = styled.div `
 
     &.show{
         display: inline;
+        position: relative;
+        left: -500px;
+        animation: ${animation} 8s;
     }
 `
 
