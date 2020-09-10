@@ -24,11 +24,27 @@ const Main = styled.main`
 export default props => {
     const { logged, setLogged } = useContext(Context)
 
+
+    const CatchInputsData = (e) => {
+        e.preventDefault()
+
+        const formTarget = e.target
+
+        const data = {}
+
+        for (let i = 0; i < formTarget.children.length; i++) {
+            if (formTarget.children[i].name !== '') {
+                data[formTarget.children[i].name] = formTarget.children[i].value
+            }
+        }
+
+        return data
+    }
+
     async function login(e) {
         e.preventDefault()
-        const email = e.target.children[0].value
-        const password = e.target.children[1].value
-        const name = e.target.children[2].value
+
+        const { email, password, name } = CatchInputsData(e)
 
         const data = !props.register ? await axios.post(config.url, {
             query: `
@@ -44,36 +60,46 @@ export default props => {
             `
         })
 
-        const { login } = data.data.data
-        const { createUser } = data.data.data
+        if (!!data.data.errors) {
+            const {message} = data.data.errors[0]
+            const divError = document.querySelector('#error')
+
+            divError.classList.add('show')
+
+            return divError.innerHTML = message
+        }
+
+        const {login} = data.data.data
+        const {createUser} = data.data.data
 
         localStorage.setItem('authorization', login || createUser)
-
         if(!!localStorage.getItem('authorization')) setLogged(true)
     }
 
     return (
         <Main>
             {!props.register &&
-            <>
-                <form onSubmit={e => login(e)}>
-                    <input type="text" name="email" id="email" placeholder='email' />
-                    <input type="text" name="password" id="password" placeholder='password' />
-                    <button type="submit">Login</button>
-                    {logged && <Redirect to='/home' />}
-                </form>
-                <Link to='/register'>Register</Link>
-            </>
+                <>
+                    <form onSubmit={e => login(e)}>
+                        <input type="text" name="email" id="email" placeholder='email' />
+                        <input type="text" name="password" id="password" placeholder='password' />
+                        <button type="submit">Login</button>
+                        {logged && <Redirect to='/home' />}
+                    </form>
+                    <Link to='/register'>Register</Link>
+                </>
             }
 
             {props.register &&
-                <form onSubmit={e => login(e)}>
-                    <input type="text" name="email" id="email" placeholder='email' />
-                    <input type="text" name="password" id="password" placeholder='password' />
-                    <input type="text" name="name" id="name" placeholder='name' />
-                    <button type="submit">Login</button>
-                    {logged && <Redirect to='/home' />}
-                </form>
+                <>
+                    <form onSubmit={e => login(e)}>
+                        <input type="text" name="email" id="email" placeholder='email' />
+                        <input type="text" name="password" id="password" placeholder='password' />
+                        <input type="text" name="name" id="name" placeholder='name' />
+                        <button type="submit">Login</button>
+                        {logged && <Redirect to='/home' />}
+                    </form>
+                </>
             }
         </Main>
     )

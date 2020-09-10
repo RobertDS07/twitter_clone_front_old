@@ -8,7 +8,8 @@ import { Context } from './components/Context'
 import Main from './components/Main'
 import Header from './components/Header'
 import Feed from './components/Feed'
-import NotFound from './components/NotFound';
+import NotFound from './components/NotFound'
+import ErrorMSG from './components/ErrorMSG'
 
 
 export default () => {
@@ -18,6 +19,8 @@ export default () => {
         <>
             <Context.Provider value={{ logged, setLogged }}>
                 <Header />
+
+                <ErrorMSG />
 
                 <Switch>
 
@@ -34,7 +37,7 @@ export default () => {
                     </Route>
 
                     <Route component={NotFound} />
-                    
+
                 </Switch>
             </Context.Provider>
 
