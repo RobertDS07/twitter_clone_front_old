@@ -31,7 +31,7 @@ export default () => {
     const [posts, setPosts] = useState()
 
     const token = localStorage.getItem('authorization')
-    
+
     useEffect(() => {
         async function getData() {
             const data = await Axios.post(config.url, {
@@ -51,11 +51,11 @@ export default () => {
         } getData()
     }, [])
 
-    async function postar (e) {
-        const token = e.target.children[0].value
-        const content = e.target.children[1].value
+    async function postar(e) {
+        const token = localStorage.getItem('authorization')
+        const content = e.target.children[0].value
 
-        const data = await Axios.post(config.url, {
+        await Axios.post(config.url, {
             query: `
             mutation{
                 createPost(token:"${token}", content:"${content}")
@@ -64,14 +64,33 @@ export default () => {
         })
     }
 
-    async function deletePost(e, {_id}){
-        await Axios.post(config.url,{
+    async function deletePost(e, _id) {
+        await Axios.post(config.url, {
             query: `
             mutation{
                 deletePost(_id:"${_id}")
             }
             `
         })
+    }
+
+    async function like(postId, e) {
+        e.preventDefault()
+        e.persist()
+
+        const likeHTML = e.target.children[0]
+
+        const data = await Axios.post(config.url, {
+            query: `
+            mutation{
+                likedPost(_id:"${postId}", userToken:"${localStorage.getItem('authorization')}")
+            }
+            `
+        })
+
+        const numberOfLikes = data.data.data.likedPost
+
+        return likeHTML.innerHTML = numberOfLikes
     }
 
     return (
@@ -81,34 +100,39 @@ export default () => {
 
             <Main>
                 <form onSubmit={e => postar(e)}>
-                    <input type="hidden" name="token" value={localStorage.getItem('authorization') || undefined}/>
-                    <input type="text" name="content" id="content"/>
+                    <input type="text" name="content" id="content" />
                     <button type="submit">postar</button>
                 </form>
             </Main>
 
             <Feed className='content'>
-            {!!posts && posts.map(post => {
-                if (post.mutable) {
-                    return(
-                    <Main key={post._id}>
-                        <form onSubmit={e => deletePost(e, post)}>
-                            <button type='submit'>Delete</button>
-                        </form>
-                        <p>{post.author}</p>
-                        <p>{post.content}</p>
-                        <p>{post.likes}</p>
-                    </Main>
+                {!!posts && posts.map(post => {
+                    if (post.mutable) {
+                        return (
+                            <Main key={post._id}>
+                                <form onSubmit={e => deletePost(e, post._id)}>
+                                    <button type='submit'>Delete</button>
+                                </form>
+                                <p>{post.author}</p>
+                                <p>{post.content}</p>
+                                <form onSubmit={e => like(post._id, e)}>
+                                    <p>{post.likes.length}</p>
+                                    <button type="submit">Like</button>
+                                </form>
+                            </Main>
+                        )
+                    }
+                    return (
+                        <Main key={post._id}>
+                            <p>{post.author}</p>
+                            <p>{post.content}</p>
+                            <form onSubmit={e => like(post._id, e)}>
+                                <p>{post.likes.length}</p>
+                                <button type="submit">Like</button>
+                            </form>
+                        </Main>
                     )
-                }
-                return(
-                <Main key={post._id}>
-                    <p>{post.author}</p>
-                    <p>{post.content}</p>
-                    <p>{post.likes}</p>
-                </Main>
-                )
-            })}
+                })}
             </Feed>
         </Feed>
     )
