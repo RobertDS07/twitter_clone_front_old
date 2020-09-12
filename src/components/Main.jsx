@@ -16,10 +16,11 @@ const Main = styled.main`
     display: flex;
     align-items: center;
     justify-content: center;
+
+    &.heightAuto {
+        height: auto;
+    }
 `
-
-// ESTUDAR MATERIALIZE
-
 
 export default props => {
     const { logged, setLogged } = useContext(Context)

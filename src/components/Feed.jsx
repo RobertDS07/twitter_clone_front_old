@@ -32,6 +32,10 @@ export default () => {
 
     const token = localStorage.getItem('authorization')
 
+    const removeError = (divError) => {
+        divError.classList.remove('show')
+    }
+
     useEffect(() => {
         async function getData() {
             const data = await Axios.post(config.url, {
@@ -43,6 +47,12 @@ export default () => {
                         likes
                         mutable
                         _id
+                        comments {
+                            _id
+                            author
+                            mutable
+                            content
+                        }
                     }
                 }
                 `
@@ -93,6 +103,43 @@ export default () => {
         return likeHTML.innerHTML = numberOfLikes
     }
 
+    async function comment(e, postId, comment) {
+        // e.preventDefault()
+        // dar um jeito de pegar o author e o content e atualizar sem ter que resetar a page 
+        e.persist()
+
+        const data = await Axios.post(config.url, {
+            query: `
+            mutation{
+                createComment(postId:"${postId}", token:"${localStorage.getItem('authorization')}", content:"${comment}"){
+                    author
+                    content
+                }
+            }
+            `
+        })
+        if (!!data.data.errors) {
+            const { message } = data.data.errors[0]
+            const divError = document.querySelector('#error')
+
+            divError.classList.add('show')
+
+            setTimeout(() => removeError(divError), 9000)
+
+            return divError.innerHTML = message
+        }
+    }
+
+    async function deleteComment(e, postId, commentId){
+        await Axios.post(config.url,{
+            query: `
+            mutation{
+                deleteComment(_id:"${commentId}", postId:"${postId}")
+            }
+            `
+        })
+    }
+
     return (
         <Feed>
 
@@ -107,29 +154,40 @@ export default () => {
 
             <Feed className='content'>
                 {!!posts && posts.map(post => {
-                    if (post.mutable) {
-                        return (
-                            <Main key={post._id}>
+                    return (
+                        <Main key={post._id} className='heightAuto'>
+                            {post.mutable &&
                                 <form onSubmit={e => deletePost(e, post._id)}>
                                     <button type='submit'>Delete</button>
                                 </form>
-                                <p>{post.author}</p>
-                                <p>{post.content}</p>
-                                <form onSubmit={e => like(post._id, e)}>
-                                    <p>{post.likes.length}</p>
-                                    <button type="submit">Like</button>
-                                </form>
-                            </Main>
-                        )
-                    }
-                    return (
-                        <Main key={post._id}>
+                            }
                             <p>{post.author}</p>
                             <p>{post.content}</p>
                             <form onSubmit={e => like(post._id, e)}>
                                 <p>{post.likes.length}</p>
                                 <button type="submit">Like</button>
                             </form>
+                            <br/>
+                            <hr />
+                            <form onSubmit={e => comment(e, post._id, e.target.children[0].value)}>
+                                <input type="text" name="comment" id="comment" />
+                                <button type='submit'>Responder</button>
+                            </form>
+                            {!!post.comments && post.comments.map(comment => {
+                                return (
+                                    <>
+                                        <h3>{comment.author}</h3>
+                                        <p>{comment.content}</p>
+                                        {comment.mutable &&
+                                            <form onSubmit={e => deleteComment(e, e.target.children[0].value, e.target.children[1].value)}>
+                                                <input type="hidden" name="PostId" value={post._id}/>
+                                                <input type="hidden" name="CommentId" value={comment._id} />
+                                                <button>Deletar comment</button>
+                                            </form>
+                                        }
+                                    </>
+                                )
+                            })}
                         </Main>
                     )
                 })}
